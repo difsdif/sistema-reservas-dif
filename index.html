@@ -1,0 +1,1844 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Reservas DIF</title>
+    <meta name="description" content="Sistema de gestión de reservas por horas - DIF">
+    <meta name="author" content="Sistema DIF">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: #2d3748;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            color: #718096;
+            font-size: 1.1rem;
+        }
+
+        .version-info {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #4299e1, #3182ce);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(66, 153, 225, 0.3);
+            margin: 0 auto 40px auto;
+            max-width: 300px;
+            transform: translateY(0);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(66, 153, 225, 0.4);
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: bold;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-top: 10px;
+        }
+
+        .section {
+            background: #f8fafc;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .section h2 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            color: #4a5568;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .form-group input, 
+        .form-group select {
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-group input:focus, 
+        .form-group select:focus {
+            outline: none;
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        }
+
+        .form-group input[readonly] {
+            background: #f7fafc;
+            color: #4a5568;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4299e1, #3182ce);
+            color: white;
+            box-shadow: 0 5px 15px rgba(66, 153, 225, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(66, 153, 225, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+            box-shadow: 0 5px 15px rgba(72, 187, 120, 0.3);
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(72, 187, 120, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f56565, #e53e3e);
+            color: white;
+            box-shadow: 0 5px 15px rgba(245, 101, 101, 0.3);
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(245, 101, 101, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .lugares-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .lugar-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .lugar-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        .lugar-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #4299e1, #3182ce);
+        }
+
+        .lugar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .lugar-numero {
+            background: linear-gradient(135deg, #4299e1, #3182ce);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .status {
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-disponible {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .status-ocupado {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .reserva-item {
+            background: #f7fafc;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 8px 0;
+            border-left: 4px solid #4299e1;
+        }
+
+        .reserva-item h4 {
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .reserva-item p {
+            color: #718096;
+            font-size: 0.9rem;
+            margin: 2px 0;
+        }
+
+        .reserva-actions {
+            margin-top: 10px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .reserva-actions button {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            animation: slideIn 0.3s ease;
+        }
+
+        .alert-success {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+
+        .alert-error {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #fc8181;
+        }
+
+        .alert-warning {
+            background: #fef5e7;
+            color: #744210;
+            border: 1px solid #f6e05e;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .lista-espera {
+            background: #fef5e7;
+            border: 2px solid #f6e05e;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .lista-espera h3 {
+            color: #744210;
+            margin-bottom: 15px;
+        }
+
+        .espera-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .disponible-option {
+            background: #c6f6d5 !important;
+            color: #22543d !important;
+        }
+
+        .ocupado-option {
+            background: #fed7d7 !important;
+            color: #742a2a !important;
+        }
+
+        .admin-only {
+            position: relative;
+        }
+
+        .admin-only::after {
+            content: '🔒';
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        .modo-admin-activo {
+            border: 2px solid #48bb78 !important;
+            background: linear-gradient(135deg, #48bb78, #38a169) !important;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .lugares-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+        }
+
+        /* Mejoras específicas para GitHub Pages */
+        .github-info {
+            background: #f0f4f8;
+            border: 1px solid #cbd5e0;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            color: #4a5568;
+        }
+
+        .status-online {
+            background: #48bb78;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            display: inline-block;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Sistema de Reservas por Horas</h1>
+            <p>Gestión inteligente de espacios con selección específica de lugares</p>
+            <span class="status-online">🌐 ONLINE - GitHub Pages</span>
+        </div>
+
+        <div class="version-info">
+            ✅ Versión optimizada para GitHub Pages - Funcionamiento completo garantizado
+        </div>
+
+        <div class="github-info">
+            <strong>💡 Información del sistema:</strong><br>
+            • Sistema completamente funcional en GitHub Pages<br>
+            • Datos guardados localmente en tu navegador<br>
+            • Compatible con todos los dispositivos y navegadores modernos<br>
+            • Acceso 24/7 desde cualquier lugar con Internet
+        </div>
+
+        <!-- Estadística -->
+        <div class="stat-card">
+            <span class="stat-number" id="lugares-disponibles-hoy">7</span>
+            <span class="stat-label">Lugares Disponibles Hoy</span>
+        </div>
+
+        <!-- Alertas -->
+        <div id="alert-container"></div>
+
+        <!-- Formulario de Reserva -->
+        <div class="section">
+            <h2>📝 Nueva Reserva</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="nombre">Nombre Completo *</label>
+                    <input type="text" id="nombre" placeholder="Ingrese su nombre completo">
+                </div>
+                <div class="form-group">
+                    <label for="departamento">Departamento *</label>
+                    <select id="departamento">
+                        <option value="">Seleccione departamento</option>
+                        <option value="Liderazgo">Liderazgo</option>
+                        <option value="Formación">Formación</option>
+                        <option value="PA">PA</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="fecha">Fecha de Ingreso *</label>
+                    <input type="date" id="fecha">
+                </div>
+            </div>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="hora-inicio">Hora de Inicio *</label>
+                    <select id="hora-inicio">
+                        <option value="">Seleccione hora</option>
+                        <option value="08:00">08:00</option>
+                        <option value="09:00">09:00</option>
+                        <option value="10:00">10:00</option>
+                        <option value="11:00">11:00</option>
+                        <option value="12:00">12:00</option>
+                        <option value="13:00">13:00</option>
+                        <option value="14:00">14:00</option>
+                        <option value="15:00">15:00</option>
+                        <option value="16:00">16:00</option>
+                        <option value="17:00">17:00</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="hora-fin">Hora de Fin *</label>
+                    <select id="hora-fin">
+                        <option value="">Primero seleccione hora de inicio</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="lugar">Lugar Deseado *</label>
+                    <select id="lugar">
+                        <option value="">Complete fecha y horario primero</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="duracion">Duración</label>
+                    <input type="text" id="duracion" readonly placeholder="Se calculará automáticamente">
+                </div>
+            </div>
+            
+            <button class="btn btn-primary" onclick="realizarReserva()">🎯 Realizar Reserva</button>
+        </div>
+
+        <!-- Consulta de Disponibilidad -->
+        <div class="section">
+            <h2>🔍 Consultar Disponibilidad</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="consulta-fecha">Fecha a Consultar</label>
+                    <input type="date" id="consulta-fecha">
+                </div>
+                <div class="form-group">
+                    <label for="consulta-hora-inicio">Hora de Inicio</label>
+                    <select id="consulta-hora-inicio">
+                        <option value="">Seleccione hora</option>
+                        <option value="08:00">08:00</option>
+                        <option value="09:00">09:00</option>
+                        <option value="10:00">10:00</option>
+                        <option value="11:00">11:00</option>
+                        <option value="12:00">12:00</option>
+                        <option value="13:00">13:00</option>
+                        <option value="14:00">14:00</option>
+                        <option value="15:00">15:00</option>
+                        <option value="16:00">16:00</option>
+                        <option value="17:00">17:00</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="consulta-hora-fin">Hora de Fin</label>
+                    <select id="consulta-hora-fin">
+                        <option value="">Primero seleccione hora de inicio</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button class="btn btn-secondary" onclick="consultarDisponibilidad()">🔍 Consultar Disponibilidad</button>
+                <button class="btn btn-secondary" onclick="limpiarConsulta()">🗑️ Limpiar Consulta</button>
+                <button class="btn btn-primary" onclick="verReservasHoy()">📅 Ver Reservas de Hoy</button>
+            </div>
+        </div>
+
+        <!-- Resultado de Consulta -->
+        <div id="resultado-consulta" style="display: none;" class="section">
+            <h2 id="titulo-resultado">Resultado de Consulta</h2>
+            <div id="lugares-consulta" class="lugares-grid">
+                <!-- Se llena dinámicamente -->
+            </div>
+        </div>
+
+        <!-- Vista de Lugares -->
+        <div class="section">
+            <h2 id="titulo-lugares">🏢 Estado de Lugares</h2>
+            <div id="lugares-container" class="lugares-grid">
+                <!-- Se llena dinámicamente -->
+            </div>
+        </div>
+
+        <!-- Lista de Espera -->
+        <div id="lista-espera" class="lista-espera" style="display: none;">
+            <h3>⏳ Lista de Espera</h3>
+            <div id="lista-espera-container">
+                <!-- Se llena dinámicamente -->
+            </div>
+        </div>
+
+        <!-- Administración -->
+        <div class="section">
+            <h2>⚙️ Administración</h2>
+            
+            <!-- Panel de Modo Administrador -->
+            <div class="form-grid" style="margin-bottom: 20px;">
+                <div class="form-group">
+                    <label for="codigo-admin">Código de Administrador</label>
+                    <input type="password" id="codigo-admin" placeholder="Ingrese código para activar modo admin">
+                </div>
+                <div class="form-group" style="display: flex; align-items: end;">
+                    <button class="btn btn-secondary" onclick="activarModoAdmin()">🔑 Activar Modo Admin</button>
+                </div>
+            </div>
+            
+            <div id="estado-admin" class="alert alert-warning" style="display: none;">
+                <span id="mensaje-admin"></span>
+                <button class="btn btn-danger" onclick="desactivarModoAdmin()" style="margin-left: 15px; padding: 5px 10px; font-size: 0.8rem;">
+                    🔒 Desactivar
+                </button>
+            </div>
+            
+            <div class="button-group">
+                <button class="btn btn-secondary" onclick="exportarDatos()">📥 Exportar Datos</button>
+                <button class="btn btn-danger" onclick="confirmarReset()" id="btn-reset">🔄 Reiniciar Sistema</button>
+                <button class="btn btn-primary" onclick="verEstadisticas()">📊 Ver Estadísticas</button>
+            </div>
+        </div>
+
+        <!-- Footer de información -->
+        <div class="github-info" style="text-align: center; margin-top: 30px;">
+            <small>🚀 <strong>Sistema alojado en GitHub Pages</strong> | 
+            📧 Contacto: sistemas@dif.org | 
+            🔄 Última actualización: <span id="fecha-actual"></span></small>
+        </div>
+    </div>
+
+    <script>
+        // =========================
+        // CONFIGURACIÓN Y DATOS
+        // =========================
+        
+        let reservas = [];
+        let listaEspera = [];
+        let contadorId = 1;
+        
+        const HORARIOS = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
+        const LUGARES_TOTAL = 7;
+        const MIN_HORAS = 2;
+        const MAX_HORAS = 8;
+        
+        // CONFIGURACIÓN DE SEGURIDAD - PUEDES CAMBIAR ESTOS VALORES
+        const CODIGO_ADMIN = "ADMIN2026"; // Cambiar por tu código preferido
+        const TIEMPO_LIMITE_CANCELACION = 2; // Horas antes de la reserva para poder cancelar
+        let modoAdministrador = false;
+        
+        // =========================
+        // INICIALIZACIÓN ROBUSTA PARA GITHUB PAGES
+        // =========================
+        
+        function inicializar() {
+            console.log('🚀 Inicializando sistema en GitHub Pages...');
+            
+            // Mostrar fecha actual
+            document.getElementById('fecha-actual').textContent = new Date().toLocaleDateString('es-ES');
+            
+            configurarFechas();
+            actualizarEstadoAdmin();
+            configurarEventListeners();
+            cargarDatosGuardados();
+            actualizarInterfaz();
+            
+            // Mostrar mensaje de bienvenida solo la primera vez
+            if (!localStorage.getItem('primera-visita-github')) {
+                localStorage.setItem('primera-visita-github', 'true');
+                setTimeout(() => {
+                    mostrarAlerta('🎉 ¡Bienvenido al Sistema de Reservas! El sistema está funcionando correctamente en GitHub Pages.', 'success');
+                }, 1000);
+            }
+            
+            console.log('✅ Sistema inicializado correctamente');
+        }
+        
+        function configurarEventListeners() {
+            // Event listeners con verificación de existencia del elemento
+            const fecha = document.getElementById('fecha');
+            const horaInicio = document.getElementById('hora-inicio');
+            const horaFin = document.getElementById('hora-fin');
+            const consultaFecha = document.getElementById('consulta-fecha');
+            const consultaHoraInicio = document.getElementById('consulta-hora-inicio');
+            const consultaHoraFin = document.getElementById('consulta-hora-fin');
+            
+            if (fecha) {
+                fecha.addEventListener('change', function() {
+                    console.log('📅 Fecha cambiada:', this.value);
+                    actualizarDisponibilidad();
+                });
+            }
+            
+            if (horaInicio) {
+                horaInicio.addEventListener('change', function() {
+                    console.log('⏰ Hora inicio cambiada:', this.value);
+                    actualizarHorasFin();
+                });
+            }
+            
+            if (horaFin) {
+                horaFin.addEventListener('change', function() {
+                    console.log('⏰ Hora fin cambiada:', this.value);
+                    actualizarDisponibilidad();
+                });
+            }
+            
+            if (consultaFecha) {
+                consultaFecha.addEventListener('change', function() {
+                    console.log('📅 Consulta fecha cambiada:', this.value);
+                    consultarDisponibilidad();
+                });
+            }
+            
+            if (consultaHoraInicio) {
+                consultaHoraInicio.addEventListener('change', function() {
+                    console.log('⏰ Consulta hora inicio cambiada:', this.value);
+                    actualizarConsultaHorasFin();
+                });
+            }
+            
+            if (consultaHoraFin) {
+                consultaHoraFin.addEventListener('change', function() {
+                    console.log('⏰ Consulta hora fin cambiada:', this.value);
+                    consultarDisponibilidad();
+                });
+            }
+        }
+        
+        function configurarFechas() {
+            const hoy = new Date();
+            const unMesDesdeHoy = new Date();
+            unMesDesdeHoy.setMonth(unMesDesdeHoy.getMonth() + 1);
+            
+            const fechaMin = hoy.toISOString().split('T')[0];
+            const fechaMax = unMesDesdeHoy.toISOString().split('T')[0];
+            
+            const fechaInput = document.getElementById('fecha');
+            const consultaFechaInput = document.getElementById('consulta-fecha');
+            
+            if (fechaInput) {
+                fechaInput.min = fechaMin;
+                fechaInput.max = fechaMax;
+                console.log('📅 Rango de fechas configurado:', fechaMin, 'a', fechaMax);
+            }
+            
+            if (consultaFechaInput) {
+                consultaFechaInput.min = fechaMin;
+                consultaFechaInput.max = fechaMax;
+            }
+        }
+        
+        function cargarDatosGuardados() {
+            try {
+                const datosGuardados = localStorage.getItem('reservas-sistema-github');
+                if (datosGuardados) {
+                    const datos = JSON.parse(datosGuardados);
+                    reservas = datos.reservas || [];
+                    listaEspera = datos.listaEspera || [];
+                    contadorId = datos.contadorId || 1;
+                    console.log('💾 Datos cargados:', reservas.length, 'reservas,', listaEspera.length, 'en espera');
+                } else {
+                    console.log('📝 Iniciando con datos limpios');
+                }
+            } catch (e) {
+                console.error('❌ Error cargando datos:', e);
+                reservas = [];
+                listaEspera = [];
+                contadorId = 1;
+            }
+        }
+        
+        // =========================
+        // PERSISTENCIA DE DATOS OPTIMIZADA
+        // =========================
+        
+        function guardarDatos() {
+            try {
+                const datos = {
+                    reservas: reservas,
+                    listaEspera: listaEspera,
+                    contadorId: contadorId,
+                    fechaGuardado: new Date().toISOString(),
+                    version: '2.0-github-pages'
+                };
+                localStorage.setItem('reservas-sistema-github', JSON.stringify(datos));
+                console.log('💾 Datos guardados correctamente');
+            } catch (e) {
+                console.error('❌ Error guardando datos:', e);
+                mostrarAlerta('⚠️ Error guardando datos. Verifique el almacenamiento del navegador.', 'warning');
+            }
+        }
+        
+        // =========================
+        // FUNCIONES DE SEGURIDAD
+        // =========================
+        
+        function activarModoAdmin() {
+            const codigo = document.getElementById('codigo-admin').value;
+            
+            if (codigo === CODIGO_ADMIN) {
+                modoAdministrador = true;
+                actualizarEstadoAdmin();
+                document.getElementById('codigo-admin').value = '';
+                mostrarAlerta('✅ Modo administrador activado. Ahora puede gestionar todas las reservas.', 'success');
+                actualizarInterfaz();
+                console.log('🔓 Modo administrador activado');
+            } else if (codigo === '') {
+                mostrarAlerta('Por favor ingrese el código de administrador', 'warning');
+            } else {
+                mostrarAlerta('❌ Código de administrador incorrecto', 'error');
+                document.getElementById('codigo-admin').value = '';
+                console.log('❌ Intento de acceso admin fallido');
+            }
+        }
+        
+        function desactivarModoAdmin() {
+            modoAdministrador = false;
+            actualizarEstadoAdmin();
+            mostrarAlerta('🔒 Modo administrador desactivado', 'warning');
+            actualizarInterfaz();
+            console.log('🔒 Modo administrador desactivado');
+        }
+        
+        function actualizarEstadoAdmin() {
+            const estadoDiv = document.getElementById('estado-admin');
+            const mensajeSpan = document.getElementById('mensaje-admin');
+            const btnReset = document.getElementById('btn-reset');
+            
+            if (!estadoDiv || !mensajeSpan || !btnReset) return;
+            
+            if (modoAdministrador) {
+                estadoDiv.style.display = 'block';
+                estadoDiv.className = 'alert alert-success';
+                mensajeSpan.textContent = '🔓 Modo Administrador ACTIVO - Puede gestionar todas las reservas';
+                btnReset.disabled = false;
+                btnReset.style.opacity = '1';
+            } else {
+                estadoDiv.style.display = 'block';
+                estadoDiv.className = 'alert alert-warning';
+                mensajeSpan.textContent = '🔒 Modo Usuario - Funciones de gestión limitadas';
+                btnReset.disabled = true;
+                btnReset.style.opacity = '0.5';
+            }
+        }
+        
+        function verificarPermisoLiberacion(reserva) {
+            if (modoAdministrador) {
+                return { permitido: true, razon: '' };
+            }
+            
+            const ahora = new Date();
+            const fechaReserva = new Date(reserva.fecha + 'T' + reserva.horaInicio);
+            const diferenciaHoras = (fechaReserva - ahora) / (1000 * 60 * 60);
+            
+            if (diferenciaHoras < TIEMPO_LIMITE_CANCELACION) {
+                return { 
+                    permitido: false, 
+                    razon: `No se puede cancelar. La reserva es en menos de ${TIEMPO_LIMITE_CANCELACION} horas.` 
+                };
+            }
+            
+            return { permitido: true, razon: '' };
+        }
+        
+        function solicitarConfirmacionAdmin(accion, callback) {
+            const codigo = prompt(`🔐 Esta acción requiere permisos de administrador.\n\n${accion}\n\nIngrese el código de administrador:`);
+            
+            if (codigo === null) {
+                return;
+            }
+            
+            if (codigo === CODIGO_ADMIN) {
+                callback();
+            } else {
+                mostrarAlerta('❌ Código de administrador incorrecto. Acción cancelada.', 'error');
+            }
+        }
+        
+        // =========================
+        // FUNCIONES DE HORARIOS
+        // =========================
+        
+        function actualizarHorasFin() {
+            const horaInicio = document.getElementById('hora-inicio').value;
+            const horaFinSelect = document.getElementById('hora-fin');
+            
+            if (!horaFinSelect) return;
+            
+            limpiarSelects(['hora-fin', 'lugar', 'duracion']);
+            
+            if (!horaInicio) {
+                horaFinSelect.innerHTML = '<option value="">Primero seleccione hora de inicio</option>';
+                return;
+            }
+            
+            const inicioIndex = HORARIOS.indexOf(horaInicio);
+            horaFinSelect.innerHTML = '<option value="">Seleccione hora de fin</option>';
+            
+            for (let i = inicioIndex + MIN_HORAS; i <= Math.min(inicioIndex + MAX_HORAS, HORARIOS.length - 1); i++) {
+                const horaFin = HORARIOS[i];
+                const duracion = i - inicioIndex;
+                
+                const option = document.createElement('option');
+                option.value = horaFin;
+                option.textContent = `${horaFin} (${duracion} horas)`;
+                horaFinSelect.appendChild(option);
+            }
+            
+            console.log('⏰ Horas fin actualizadas para:', horaInicio);
+        }
+        
+        function actualizarConsultaHorasFin() {
+            const horaInicio = document.getElementById('consulta-hora-inicio').value;
+            const horaFinSelect = document.getElementById('consulta-hora-fin');
+            
+            if (!horaFinSelect) return;
+            
+            if (!horaInicio) {
+                horaFinSelect.innerHTML = '<option value="">Primero seleccione hora de inicio</option>';
+                return;
+            }
+            
+            const inicioIndex = HORARIOS.indexOf(horaInicio);
+            horaFinSelect.innerHTML = '<option value="">Seleccione hora de fin</option>';
+            
+            for (let i = inicioIndex + MIN_HORAS; i <= Math.min(inicioIndex + MAX_HORAS, HORARIOS.length - 1); i++) {
+                const horaFin = HORARIOS[i];
+                const duracion = i - inicioIndex;
+                
+                const option = document.createElement('option');
+                option.value = horaFin;
+                option.textContent = `${horaFin} (${duracion} horas)`;
+                horaFinSelect.appendChild(option);
+            }
+        }
+        
+        // =========================
+        // FUNCIONES DE DISPONIBILIDAD
+        // =========================
+        
+        function actualizarDisponibilidad() {
+            const fecha = document.getElementById('fecha').value;
+            const horaInicio = document.getElementById('hora-inicio').value;
+            const horaFin = document.getElementById('hora-fin').value;
+            const lugarSelect = document.getElementById('lugar');
+            const duracionInput = document.getElementById('duracion');
+            
+            if (!lugarSelect || !duracionInput) return;
+            
+            console.log('🔄 Actualizando disponibilidad:', fecha, horaInicio, horaFin);
+            
+            if (!fecha || !horaInicio || !horaFin) {
+                lugarSelect.innerHTML = '<option value="">Complete fecha y horario primero</option>';
+                duracionInput.value = '';
+                return;
+            }
+            
+            const inicioIndex = HORARIOS.indexOf(horaInicio);
+            const finIndex = HORARIOS.indexOf(horaFin);
+            const duracion = finIndex - inicioIndex;
+            duracionInput.value = `${duracion} horas (${horaInicio} - ${horaFin})`;
+            
+            lugarSelect.innerHTML = '<option value="">Seleccione un lugar</option>';
+            
+            let lugaresDisponibles = 0;
+            
+            for (let lugar = 1; lugar <= LUGARES_TOTAL; lugar++) {
+                const disponible = verificarDisponibilidad(fecha, lugar, horaInicio, horaFin);
+                const option = document.createElement('option');
+                option.value = lugar;
+                
+                if (disponible) {
+                    option.textContent = `Lugar ${lugar} - ✅ Disponible`;
+                    option.className = 'disponible-option';
+                    lugaresDisponibles++;
+                } else {
+                    option.textContent = `Lugar ${lugar} - ❌ Ocupado`;
+                    option.className = 'ocupado-option';
+                    option.disabled = true;
+                }
+                
+                lugarSelect.appendChild(option);
+            }
+            
+            if (lugaresDisponibles > 0) {
+                const autoOption = document.createElement('option');
+                autoOption.value = 'auto';
+                autoOption.textContent = '🎯 Asignar automáticamente';
+                lugarSelect.appendChild(autoOption);
+            }
+            
+            console.log('✅ Disponibilidad actualizada:', lugaresDisponibles, 'lugares disponibles');
+        }
+        
+        function verificarDisponibilidad(fecha, lugar, horaInicio, horaFin) {
+            const reservasDelLugar = reservas.filter(r => 
+                r.fecha === fecha && r.lugar === lugar
+            );
+            
+            const inicioMinutos = horaAMinutos(horaInicio);
+            const finMinutos = horaAMinutos(horaFin);
+            
+            for (let reserva of reservasDelLugar) {
+                const reservaInicio = horaAMinutos(reserva.horaInicio);
+                const reservaFin = horaAMinutos(reserva.horaFin);
+                
+                if (inicioMinutos < reservaFin && finMinutos > reservaInicio) {
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+        
+        function horaAMinutos(hora) {
+            const [horas, minutos] = hora.split(':').map(Number);
+            return horas * 60 + minutos;
+        }
+        
+        // =========================
+        // FUNCIONES DE RESERVA
+        // =========================
+        
+        function realizarReserva() {
+            console.log('🎯 Iniciando proceso de reserva...');
+            
+            const datos = obtenerDatosFormulario();
+            
+            if (!validarDatos(datos)) {
+                return;
+            }
+            
+            let lugarAsignado;
+            
+            if (datos.lugar === 'auto') {
+                lugarAsignado = buscarLugarDisponible(datos.fecha, datos.horaInicio, datos.horaFin);
+            } else {
+                if (verificarDisponibilidad(datos.fecha, parseInt(datos.lugar), datos.horaInicio, datos.horaFin)) {
+                    lugarAsignado = parseInt(datos.lugar);
+                } else {
+                    mostrarAlerta('El lugar seleccionado ya no está disponible', 'error');
+                    actualizarDisponibilidad();
+                    return;
+                }
+            }
+            
+            if (lugarAsignado) {
+                const nuevaReserva = {
+                    id: contadorId++,
+                    nombre: datos.nombre,
+                    departamento: datos.departamento,
+                    fecha: datos.fecha,
+                    horaInicio: datos.horaInicio,
+                    horaFin: datos.horaFin,
+                    lugar: lugarAsignado,
+                    fechaReserva: new Date().toLocaleString('es-ES'),
+                    plataforma: 'GitHub Pages'
+                };
+                
+                reservas.push(nuevaReserva);
+                guardarDatos();
+                
+                const fechaFormateada = formatearFecha(datos.fecha);
+                const duracion = HORARIOS.indexOf(datos.horaFin) - HORARIOS.indexOf(datos.horaInicio);
+                
+                mostrarAlerta(
+                    `¡Reserva exitosa! Lugar ${lugarAsignado} asignado a ${datos.nombre} para el ${fechaFormateada} de ${datos.horaInicio} a ${datos.horaFin} (${duracion} horas)`,
+                    'success'
+                );
+                
+                limpiarFormulario();
+                actualizarInterfaz();
+                
+                console.log('✅ Reserva creada exitosamente:', nuevaReserva);
+            } else {
+                agregarAListaEspera(datos);
+            }
+        }
+        
+        function obtenerDatosFormulario() {
+            return {
+                nombre: document.getElementById('nombre')?.value.trim() || '',
+                departamento: document.getElementById('departamento')?.value || '',
+                fecha: document.getElementById('fecha')?.value || '',
+                horaInicio: document.getElementById('hora-inicio')?.value || '',
+                horaFin: document.getElementById('hora-fin')?.value || '',
+                lugar: document.getElementById('lugar')?.value || ''
+            };
+        }
+        
+        function validarDatos(datos) {
+            if (!datos.nombre || !datos.departamento || !datos.fecha || !datos.horaInicio || !datos.horaFin || !datos.lugar) {
+                mostrarAlerta('Por favor complete todos los campos requeridos', 'error');
+                return false;
+            }
+            
+            const fechaSeleccionada = new Date(datos.fecha);
+            const hoy = new Date();
+            const unMes = new Date();
+            unMes.setMonth(unMes.getMonth() + 1);
+            
+            if (fechaSeleccionada < hoy || fechaSeleccionada > unMes) {
+                mostrarAlerta('La fecha debe estar entre hoy y un mes en el futuro', 'error');
+                return false;
+            }
+            
+            return true;
+        }
+        
+        function buscarLugarDisponible(fecha, horaInicio, horaFin) {
+            for (let lugar = 1; lugar <= LUGARES_TOTAL; lugar++) {
+                if (verificarDisponibilidad(fecha, lugar, horaInicio, horaFin)) {
+                    return lugar;
+                }
+            }
+            return null;
+        }
+        
+        function agregarAListaEspera(datos) {
+            const personaEspera = {
+                id: contadorId++,
+                nombre: datos.nombre,
+                departamento: datos.departamento,
+                fecha: datos.fecha,
+                horaInicio: datos.horaInicio,
+                horaFin: datos.horaFin,
+                lugarDeseado: datos.lugar === 'auto' ? 'Cualquiera' : `Lugar ${datos.lugar}`,
+                fechaSolicitud: new Date().toLocaleString('es-ES'),
+                plataforma: 'GitHub Pages'
+            };
+            
+            listaEspera.push(personaEspera);
+            guardarDatos();
+            
+            const fechaFormateada = formatearFecha(datos.fecha);
+            mostrarAlerta(
+                `No hay lugares disponibles. ${datos.nombre} agregado a lista de espera para el ${fechaFormateada} (${datos.horaInicio}-${datos.horaFin})`,
+                'warning'
+            );
+            
+            limpiarFormulario();
+            actualizarInterfaz();
+            
+            console.log('⏳ Persona agregada a lista de espera:', personaEspera);
+        }
+        
+        // =========================
+        // FUNCIONES DE CONSULTA
+        // =========================
+        
+        function consultarDisponibilidad() {
+            const fecha = document.getElementById('consulta-fecha')?.value;
+            const horaInicio = document.getElementById('consulta-hora-inicio')?.value;
+            const horaFin = document.getElementById('consulta-hora-fin')?.value;
+            
+            if (!fecha) {
+                mostrarAlerta('Seleccione una fecha para consultar', 'warning');
+                return;
+            }
+            
+            const resultadoDiv = document.getElementById('resultado-consulta');
+            const tituloResultado = document.getElementById('titulo-resultado');
+            const lugaresConsulta = document.getElementById('lugares-consulta');
+            
+            if (!resultadoDiv || !tituloResultado || !lugaresConsulta) return;
+            
+            resultadoDiv.style.display = 'block';
+            
+            if (horaInicio && horaFin) {
+                const fechaFormateada = formatearFecha(fecha);
+                const duracion = HORARIOS.indexOf(horaFin) - HORARIOS.indexOf(horaInicio);
+                tituloResultado.textContent = `🔍 Disponibilidad para ${fechaFormateada} de ${horaInicio} a ${horaFin} (${duracion}h)`;
+                
+                mostrarDisponibilidadPorHorario(fecha, horaInicio, horaFin, lugaresConsulta);
+            } else {
+                const fechaFormateada = formatearFecha(fecha);
+                tituloResultado.textContent = `📅 Estado general para ${fechaFormateada}`;
+                
+                mostrarEstadoGeneral(fecha, lugaresConsulta);
+            }
+            
+            console.log('🔍 Consulta realizada para:', fecha, horaInicio, horaFin);
+        }
+        
+        function mostrarDisponibilidadPorHorario(fecha, horaInicio, horaFin, container) {
+            container.innerHTML = '';
+            
+            for (let lugar = 1; lugar <= LUGARES_TOTAL; lugar++) {
+                const disponible = verificarDisponibilidad(fecha, lugar, horaInicio, horaFin);
+                const reservasDelLugar = obtenerReservasDelLugar(fecha, lugar);
+                
+                const card = document.createElement('div');
+                card.className = 'lugar-card';
+                card.style.border = disponible ? '2px solid #48bb78' : '2px solid #f56565';
+                
+                let contenidoReservas = '';
+                if (reservasDelLugar.length > 0) {
+                    contenidoReservas = '<div style="margin-top: 10px;"><strong>Reservas existentes:</strong>';
+                    reservasDelLugar.forEach(reserva => {
+                        const duracion = HORARIOS.indexOf(reserva.horaFin) - HORARIOS.indexOf(reserva.horaInicio);
+                        contenidoReservas += `
+                            <div class="reserva-item">
+                                <p><strong>${reserva.nombre}</strong> - ${reserva.departamento}</p>
+                                <p>🕐 ${reserva.horaInicio} - ${reserva.horaFin} (${duracion}h)</p>
+                            </div>
+                        `;
+                    });
+                    contenidoReservas += '</div>';
+                }
+                
+                card.innerHTML = `
+                    <div class="lugar-header">
+                        <div class="lugar-numero">Lugar ${lugar}</div>
+                        <div class="status ${disponible ? 'status-disponible' : 'status-ocupado'}">
+                            ${disponible ? '✅ Disponible' : '❌ Ocupado'}
+                        </div>
+                    </div>
+                    <div>
+                        <h3>${disponible ? 'Disponible para reservar' : 'No disponible en este horario'}</h3>
+                        ${contenidoReservas}
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            }
+        }
+        
+        function mostrarEstadoGeneral(fecha, container) {
+            container.innerHTML = '';
+            
+            for (let lugar = 1; lugar <= LUGARES_TOTAL; lugar++) {
+                const reservasDelLugar = obtenerReservasDelLugar(fecha, lugar);
+                const tieneReservas = reservasDelLugar.length > 0;
+                
+                const card = document.createElement('div');
+                card.className = 'lugar-card';
+                
+                let contenidoReservas = '';
+                if (tieneReservas) {
+                    reservasDelLugar.sort((a, b) => horaAMinutos(a.horaInicio) - horaAMinutos(b.horaInicio));
+                    reservasDelLugar.forEach(reserva => {
+                        const duracion = HORARIOS.indexOf(reserva.horaFin) - HORARIOS.indexOf(reserva.horaInicio);
+                        contenidoReservas += `
+                            <div class="reserva-item">
+                                <p><strong>${reserva.nombre}</strong> - ${reserva.departamento}</p>
+                                <p>🕐 ${reserva.horaInicio} - ${reserva.horaFin} (${duracion}h)</p>
+                                <div class="reserva-actions">
+                                    ${generarBotonLiberar(reserva)}
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                card.innerHTML = `
+                    <div class="lugar-header">
+                        <div class="lugar-numero">Lugar ${lugar}</div>
+                        <div class="status ${tieneReservas ? 'status-ocupado' : 'status-disponible'}">
+                            ${tieneReservas ? `${reservasDelLugar.length} Reserva(s)` : 'Libre'}
+                        </div>
+                    </div>
+                    <div>
+                        ${tieneReservas ? contenidoReservas : '<p>Sin reservas para este día</p>'}
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            }
+        }
+        
+        function verReservasHoy() {
+            const hoy = new Date().toISOString().split('T')[0];
+            const consultaFecha = document.getElementById('consulta-fecha');
+            if (consultaFecha) {
+                consultaFecha.value = hoy;
+                consultarDisponibilidad();
+            }
+        }
+        
+        function limpiarConsulta() {
+            const consultaFecha = document.getElementById('consulta-fecha');
+            const consultaHoraInicio = document.getElementById('consulta-hora-inicio');
+            const consultaHoraFin = document.getElementById('consulta-hora-fin');
+            const resultadoConsulta = document.getElementById('resultado-consulta');
+            
+            if (consultaFecha) consultaFecha.value = '';
+            if (consultaHoraInicio) consultaHoraInicio.value = '';
+            if (consultaHoraFin) consultaHoraFin.innerHTML = '<option value="">Primero seleccione hora de inicio</option>';
+            if (resultadoConsulta) resultadoConsulta.style.display = 'none';
+        }
+        
+        // =========================
+        // FUNCIONES DE GESTIÓN
+        // =========================
+        
+        function liberarReserva(id) {
+            const reservaIndex = reservas.findIndex(r => r.id === id);
+            if (reservaIndex === -1) {
+                mostrarAlerta('❌ Reserva no encontrada', 'error');
+                return;
+            }
+            
+            const reserva = reservas[reservaIndex];
+            const permisos = verificarPermisoLiberacion(reserva);
+            
+            if (!permisos.permitido) {
+                if (modoAdministrador) {
+                    if (confirm(`⚠️ ${permisos.razon}\n\n¿Desea liberar la reserva de todas formas?`)) {
+                        ejecutarLiberacionReserva(reservaIndex);
+                    }
+                } else {
+                    solicitarConfirmacionAdmin(
+                        `Liberar reserva de ${reserva.nombre} para el ${formatearFecha(reserva.fecha)} (${reserva.horaInicio}-${reserva.horaFin})`,
+                        () => ejecutarLiberacionReserva(reservaIndex)
+                    );
+                }
+                return;
+            }
+            
+            const fechaFormateada = formatearFecha(reserva.fecha);
+            if (confirm(`¿Está seguro de liberar la reserva de ${reserva.nombre} para el ${fechaFormateada} (${reserva.horaInicio}-${reserva.horaFin})?`)) {
+                ejecutarLiberacionReserva(reservaIndex);
+            }
+        }
+        
+        function ejecutarLiberacionReserva(reservaIndex) {
+            const reservaLiberada = reservas[reservaIndex];
+            reservas.splice(reservaIndex, 1);
+            
+            const esperaIndex = listaEspera.findIndex(p => 
+                p.fecha === reservaLiberada.fecha &&
+                p.horaInicio === reservaLiberada.horaInicio &&
+                p.horaFin === reservaLiberada.horaFin &&
+                (p.lugarDeseado === 'Cualquiera' || p.lugarDeseado === `Lugar ${reservaLiberada.lugar}`)
+            );
+            
+            if (esperaIndex !== -1) {
+                const siguientePersona = listaEspera[esperaIndex];
+                
+                const nuevaReserva = {
+                    id: contadorId++,
+                    nombre: siguientePersona.nombre,
+                    departamento: siguientePersona.departamento,
+                    fecha: siguientePersona.fecha,
+                    horaInicio: siguientePersona.horaInicio,
+                    horaFin: siguientePersona.horaFin,
+                    lugar: reservaLiberada.lugar,
+                    fechaReserva: new Date().toLocaleString('es-ES'),
+                    plataforma: 'GitHub Pages'
+                };
+                
+                reservas.push(nuevaReserva);
+                listaEspera.splice(esperaIndex, 1);
+                
+                const fechaFormateada = formatearFecha(reservaLiberada.fecha);
+                mostrarAlerta(
+                    `✅ Lugar ${reservaLiberada.lugar} liberado y asignado automáticamente a ${siguientePersona.nombre} para el ${fechaFormateada}`,
+                    'success'
+                );
+            } else {
+                const fechaFormateada = formatearFecha(reservaLiberada.fecha);
+                mostrarAlerta(
+                    `✅ Lugar ${reservaLiberada.lugar} liberado para el ${fechaFormateada} (${reservaLiberada.horaInicio}-${reservaLiberada.horaFin})`,
+                    'success'
+                );
+            }
+            
+            guardarDatos();
+            actualizarInterfaz();
+            
+            console.log('🗑️ Reserva liberada:', reservaLiberada);
+        }
+        
+        function removerDeListaEspera(id) {
+            if (!modoAdministrador) {
+                const persona = listaEspera.find(p => p.id === id);
+                if (persona) {
+                    solicitarConfirmacionAdmin(
+                        `Remover a ${persona.nombre} de la lista de espera`,
+                        () => ejecutarRemoverDeListaEspera(id)
+                    );
+                }
+                return;
+            }
+            
+            if (confirm('¿Está seguro de remover esta persona de la lista de espera?')) {
+                ejecutarRemoverDeListaEspera(id);
+            }
+        }
+        
+        function ejecutarRemoverDeListaEspera(id) {
+            const personaIndex = listaEspera.findIndex(p => p.id === id);
+            if (personaIndex !== -1) {
+                const persona = listaEspera[personaIndex];
+                listaEspera.splice(personaIndex, 1);
+                guardarDatos();
+                mostrarAlerta(`✅ ${persona.nombre} removido de la lista de espera`, 'success');
+                actualizarInterfaz();
+            }
+        }
+        
+        // =========================
+        // FUNCIONES DE INTERFAZ
+        // =========================
+        
+        function actualizarInterfaz() {
+            actualizarEstadisticas();
+            actualizarVistaPrincipal();
+            actualizarListaEspera();
+        }
+        
+        function actualizarEstadisticas() {
+            const hoy = new Date().toISOString().split('T')[0];
+            let lugaresDisponibles = 0;
+            
+            for (let lugar = 1; lugar <= LUGARES_TOTAL; lugar++) {
+                const reservasHoy = reservas.filter(r => r.fecha === hoy && r.lugar === lugar);
+                
+                if (reservasHoy.length === 0) {
+                    lugaresDisponibles++;
+                } else {
+                    const horasOcupadas = new Set();
+                    reservasHoy.forEach(reserva => {
+                        const inicio = HORARIOS.indexOf(reserva.horaInicio);
+                        const fin = HORARIOS.indexOf(reserva.horaFin);
+                        for (let i = inicio; i < fin; i++) {
+                            horasOcupadas.add(i);
+                        }
+                    });
+                    
+                    let maxLibres = 0;
+                    let libresActuales = 0;
+                    
+                    for (let i = 0; i < HORARIOS.length - 1; i++) {
+                        if (!horasOcupadas.has(i)) {
+                            libresActuales++;
+                            maxLibres = Math.max(maxLibres, libresActuales);
+                        } else {
+                            libresActuales = 0;
+                        }
+                    }
+                    
+                    if (maxLibres >= MIN_HORAS) {
+                        lugaresDisponibles += 0.5;
+                    }
+                }
+            }
+            
+            const estadoElement = document.getElementById('lugares-disponibles-hoy');
+            if (estadoElement) {
+                estadoElement.textContent = Math.floor(lugaresDisponibles);
+            }
+        }
+        
+        function actualizarVistaPrincipal() {
+            const container = document.getElementById('lugares-container');
+            const titulo = document.getElementById('titulo-lugares');
+            
+            if (!container || !titulo) return;
+            
+            const hoy = new Date();
+            const tresDias = new Date();
+            tresDias.setDate(tresDias.getDate() + 3);
+            
+            const reservasProximas = reservas.filter(r => {
+                const fechaReserva = new Date(r.fecha);
+                return fechaReserva >= hoy && fechaReserva <= tresDias;
+            });
+            
+            if (reservasProximas.length === 0) {
+                titulo.textContent = '🏢 No hay reservas en los próximos 3 días';
+                container.innerHTML = '<p style="text-align: center; color: #718096; padding: 40px; grid-column: 1 / -1;">No hay reservas programadas para los próximos 3 días</p>';
+                return;
+            }
+            
+            titulo.textContent = `🏢 Próximas Reservas (${reservasProximas.length})`;
+            container.innerHTML = '';
+            
+            const reservasPorFecha = {};
+            reservasProximas.forEach(reserva => {
+                if (!reservasPorFecha[reserva.fecha]) {
+                    reservasPorFecha[reserva.fecha] = [];
+                }
+                reservasPorFecha[reserva.fecha].push(reserva);
+            });
+            
+            Object.keys(reservasPorFecha).sort().forEach(fecha => {
+                const fechaFormateada = formatearFecha(fecha);
+                
+                const fechaHeader = document.createElement('div');
+                fechaHeader.style.gridColumn = '1 / -1';
+                fechaHeader.style.background = 'linear-gradient(135deg, #667eea, #764ba2)';
+                fechaHeader.style.color = 'white';
+                fechaHeader.style.padding = '15px 20px';
+                fechaHeader.style.borderRadius = '10px';
+                fechaHeader.style.marginBottom = '15px';
+                fechaHeader.innerHTML = `<h3>📅 ${fechaFormateada} (${reservasPorFecha[fecha].length} reservas)</h3>`;
+                container.appendChild(fechaHeader);
+                
+                reservasPorFecha[fecha].forEach(reserva => {
+                    const duracion = HORARIOS.indexOf(reserva.horaFin) - HORARIOS.indexOf(reserva.horaInicio);
+                    
+                    const card = document.createElement('div');
+                    card.className = 'lugar-card';
+                    
+                    card.innerHTML = `
+                        <div class="lugar-header">
+                            <div class="lugar-numero">Lugar ${reserva.lugar}</div>
+                            <div class="status status-ocupado">Reservado</div>
+                        </div>
+                        <div class="reserva-item">
+                            <h4>${reserva.nombre}</h4>
+                            <p><strong>Departamento:</strong> ${reserva.departamento}</p>
+                            <p><strong>Horario:</strong> ${reserva.horaInicio} - ${reserva.horaFin} (${duracion}h)</p>
+                            <p><strong>Reservado:</strong> ${reserva.fechaReserva}</p>
+                            <div class="reserva-actions">
+                                ${generarBotonLiberar(reserva)}
+                            </div>
+                        </div>
+                    `;
+                    
+                    container.appendChild(card);
+                });
+            });
+        }
+        
+        function generarBotonLiberar(reserva) {
+            const permisos = verificarPermisoLiberacion(reserva);
+            
+            if (modoAdministrador) {
+                return `<button class="btn btn-danger modo-admin-activo" onclick="liberarReserva(${reserva.id})">
+                    🔓 Liberar Lugar (Admin)
+                </button>`;
+            } else if (permisos.permitido) {
+                return `<button class="btn btn-danger" onclick="liberarReserva(${reserva.id})">
+                    Liberar Lugar
+                </button>`;
+            } else {
+                return `<button class="btn btn-danger admin-only" onclick="liberarReserva(${reserva.id})" title="${permisos.razon}">
+                    🔒 Liberar Lugar
+                </button>`;
+            }
+        }
+        
+        function actualizarListaEspera() {
+            const listaEsperaDiv = document.getElementById('lista-espera');
+            const container = document.getElementById('lista-espera-container');
+            
+            if (!listaEsperaDiv || !container) return;
+            
+            if (listaEspera.length === 0) {
+                listaEsperaDiv.style.display = 'none';
+                return;
+            }
+            
+            listaEsperaDiv.style.display = 'block';
+            container.innerHTML = '';
+            
+            const esperaPorFecha = {};
+            listaEspera.forEach(persona => {
+                if (!esperaPorFecha[persona.fecha]) {
+                    esperaPorFecha[persona.fecha] = [];
+                }
+                esperaPorFecha[persona.fecha].push(persona);
+            });
+            
+            Object.keys(esperaPorFecha).sort().forEach(fecha => {
+                const fechaFormateada = formatearFecha(fecha);
+                
+                const fechaHeader = document.createElement('div');
+                fechaHeader.style.background = '#f7fafc';
+                fechaHeader.style.padding = '12px 16px';
+                fechaHeader.style.borderRadius = '8px';
+                fechaHeader.style.marginBottom = '10px';
+                fechaHeader.style.fontWeight = 'bold';
+                fechaHeader.style.color = '#2d3748';
+                fechaHeader.textContent = `📅 ${fechaFormateada}`;
+                container.appendChild(fechaHeader);
+                
+                esperaPorFecha[fecha].forEach((persona, index) => {
+                    const duracion = HORARIOS.indexOf(persona.horaFin) - HORARIOS.indexOf(persona.horaInicio);
+                    
+                    const item = document.createElement('div');
+                    item.className = 'espera-item';
+                    
+                    item.innerHTML = `
+                        <div>
+                            <strong>${index + 1}. ${persona.nombre}</strong> - ${persona.departamento}
+                            <br><small>🕐 ${persona.horaInicio} - ${persona.horaFin} (${duracion}h)</small>
+                            <br><small>📍 ${persona.lugarDeseado}</small>
+                            <br><small>📅 Solicitó: ${persona.fechaSolicitud}</small>
+                        </div>
+                        <button class="btn btn-danger" onclick="removerDeListaEspera(${persona.id})" style="padding: 8px 12px; font-size: 0.8rem;">
+                            Remover
+                        </button>
+                    `;
+                    
+                    container.appendChild(item);
+                });
+            });
+        }
+        
+        // =========================
+        // FUNCIONES DE ADMINISTRACIÓN
+        // =========================
+        
+        function exportarDatos() {
+            const datos = {
+                reservas: reservas,
+                listaEspera: listaEspera,
+                estadisticas: {
+                    totalReservas: reservas.length,
+                    totalEspera: listaEspera.length,
+                    fechasConReservas: [...new Set(reservas.map(r => r.fecha))].length
+                },
+                fechaExportacion: new Date().toLocaleString('es-ES'),
+                plataforma: 'GitHub Pages',
+                version: '2.0'
+            };
+            
+            const dataStr = JSON.stringify(datos, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `reservas_github_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            mostrarAlerta('📥 Datos exportados exitosamente desde GitHub Pages', 'success');
+            console.log('📥 Datos exportados:', datos);
+        }
+        
+        function confirmarReset() {
+            if (!modoAdministrador) {
+                mostrarAlerta('❌ Esta función requiere permisos de administrador. Active el modo administrador primero.', 'error');
+                return;
+            }
+            
+            if (confirm('⚠️ ¿Está seguro de que desea reiniciar el sistema?\n\nEsta acción eliminará TODAS las reservas y la lista de espera.\n\nEsta acción NO se puede deshacer.')) {
+                if (confirm('🔴 CONFIRMACIÓN FINAL\n\n¿Realmente desea ELIMINAR todos los datos del sistema?\n\nÚltima oportunidad para cancelar.')) {
+                    reservas = [];
+                    listaEspera = [];
+                    contadorId = 1;
+                    
+                    try {
+                        localStorage.removeItem('reservas-sistema-github');
+                    } catch (e) {
+                        console.log('Error eliminando datos del almacenamiento:', e);
+                    }
+                    
+                    limpiarFormulario();
+                    limpiarConsulta();
+                    
+                    actualizarInterfaz();
+                    mostrarAlerta('🔄 Sistema reiniciado correctamente. Todos los datos han sido eliminados.', 'success');
+                    console.log('🔄 Sistema reiniciado completamente');
+                }
+            }
+        }
+        
+        function verEstadisticas() {
+            const stats = calcularEstadisticas();
+            
+            const mensaje = `
+📊 ESTADÍSTICAS DEL SISTEMA - GITHUB PAGES
+
+📝 Reservas:
+• Total de reservas: ${stats.totalReservas}
+• Reservas hoy: ${stats.reservasHoy}
+• Reservas esta semana: ${stats.reservasEstaSemana}
+
+⏳ Lista de espera:
+• Personas esperando: ${stats.totalEspera}
+
+🏢 Lugares:
+• Lugares ocupados hoy: ${stats.lugaresOcupadosHoy}
+• Lugar con mayor uso: ${stats.lugarMasUsado}
+
+📅 Fechas:
+• Días con reservas: ${stats.diasConReservas}
+• Próxima reserva: ${stats.proximaReserva}
+
+⏰ Horarios:
+• Horario más popular: ${stats.horarioMasPopular}
+• Duración promedio: ${stats.duracionPromedio} horas
+
+🔐 Seguridad:
+• Modo administrador: ${modoAdministrador ? '🔓 ACTIVO' : '🔒 INACTIVO'}
+• Tiempo límite cancelación: ${TIEMPO_LIMITE_CANCELACION} horas
+
+🌐 Plataforma:
+• GitHub Pages - Funcionamiento óptimo
+• URL compartible y accesible 24/7
+            `;
+            
+            alert(mensaje);
+        }
+        
+        function calcularEstadisticas() {
+            const hoy = new Date().toISOString().split('T')[0];
+            const inicioSemana = new Date();
+            inicioSemana.setDate(inicioSemana.getDate() - inicioSemana.getDay());
+            const finSemana = new Date(inicioSemana);
+            finSemana.setDate(finSemana.getDate() + 6);
+            
+            const reservasHoy = reservas.filter(r => r.fecha === hoy);
+            const reservasEstaSemana = reservas.filter(r => {
+                const fecha = new Date(r.fecha);
+                return fecha >= inicioSemana && fecha <= finSemana;
+            });
+            
+            const usoLugares = {};
+            reservas.forEach(r => {
+                usoLugares[r.lugar] = (usoLugares[r.lugar] || 0) + 1;
+            });
+            const lugarMasUsado = Object.keys(usoLugares).reduce((a, b) => 
+                usoLugares[a] > usoLugares[b] ? a : b, 1
+            );
+            
+            const usoHorarios = {};
+            reservas.forEach(r => {
+                usoHorarios[r.horaInicio] = (usoHorarios[r.horaInicio] || 0) + 1;
+            });
+            const horarioMasPopular = Object.keys(usoHorarios).reduce((a, b) => 
+                usoHorarios[a] > usoHorarios[b] ? a : b, '08:00'
+            ) || 'N/A';
+            
+            const duraciones = reservas.map(r => 
+                HORARIOS.indexOf(r.horaFin) - HORARIOS.indexOf(r.horaInicio)
+            );
+            const duracionPromedio = duraciones.length > 0 ? 
+                (duraciones.reduce((a, b) => a + b, 0) / duraciones.length).toFixed(1) : 0;
+            
+            const proximasReservas = reservas.filter(r => new Date(r.fecha) >= new Date());
+            proximasReservas.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+            const proximaReserva = proximasReservas.length > 0 ? 
+                formatearFecha(proximasReservas[0].fecha) : 'N/A';
+            
+            return {
+                totalReservas: reservas.length,
+                reservasHoy: reservasHoy.length,
+                reservasEstaSemana: reservasEstaSemana.length,
+                totalEspera: listaEspera.length,
+                lugaresOcupadosHoy: new Set(reservasHoy.map(r => r.lugar)).size,
+                lugarMasUsado: `Lugar ${lugarMasUsado} (${usoLugares[lugarMasUsado] || 0} veces)`,
+                diasConReservas: new Set(reservas.map(r => r.fecha)).size,
+                proximaReserva: proximaReserva,
+                horarioMasPopular: `${horarioMasPopular} (${usoHorarios[horarioMasPopular] || 0} veces)`,
+                duracionPromedio: duracionPromedio
+            };
+        }
+        
+        // =========================
+        // FUNCIONES AUXILIARES
+        // =========================
+        
+        function obtenerReservasDelLugar(fecha, lugar) {
+            return reservas.filter(r => r.fecha === fecha && r.lugar === lugar);
+        }
+        
+        function formatearFecha(fecha) {
+            try {
+                return new Date(fecha).toLocaleDateString('es-ES');
+            } catch (e) {
+                return fecha;
+            }
+        }
+        
+        function limpiarFormulario() {
+            const elementos = ['nombre', 'departamento', 'fecha', 'hora-inicio', 'duracion'];
+            
+            elementos.forEach(id => {
+                const elemento = document.getElementById(id);
+                if (elemento) {
+                    elemento.value = '';
+                }
+            });
+            
+            const horaFin = document.getElementById('hora-fin');
+            if (horaFin) {
+                horaFin.innerHTML = '<option value="">Primero seleccione hora de inicio</option>';
+            }
+            
+            const lugar = document.getElementById('lugar');
+            if (lugar) {
+                lugar.innerHTML = '<option value="">Complete fecha y horario primero</option>';
+            }
+        }
+        
+        function limpiarSelects(ids) {
+            ids.forEach(id => {
+                const elemento = document.getElementById(id);
+                if (elemento) {
+                    if (elemento.tagName === 'SELECT') {
+                        elemento.innerHTML = '<option value="">Seleccione...</option>';
+                    } else {
+                        elemento.value = '';
+                    }
+                }
+            });
+        }
+        
+        function mostrarAlerta(mensaje, tipo) {
+            const container = document.getElementById('alert-container');
+            if (!container) return;
+            
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${tipo}`;
+            alert.textContent = mensaje;
+            
+            container.innerHTML = '';
+            container.appendChild(alert);
+            
+            setTimeout(() => {
+                if (alert.parentNode) {
+                    alert.remove();
+                }
+            }, 5000);
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            console.log(`${tipo.toUpperCase()}: ${mensaje}`);
+        }
+        
+        // =========================
+        // INICIALIZACIÓN AUTOMÁTICA PARA GITHUB PAGES
+        // =========================
+        
+        // Múltiples métodos de inicialización para máxima compatibilidad
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', inicializar);
+        } else {
+            inicializar();
+        }
+        
+        // Respaldo adicional
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                if (typeof configurarFechas === 'function' && !document.getElementById('fecha').min) {
+                    console.log('🔄 Ejecutando inicialización de respaldo...');
+                    inicializar();
+                }
+            }, 500);
+        });
+        
+        // Indicar que el script está listo
+        console.log('🎯 Script de GitHub Pages cargado y listo');
+    </script>
+</body>
+</html>
